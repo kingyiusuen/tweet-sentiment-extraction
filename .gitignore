@@ -1,6 +1,10 @@
 # Data
 /data
 
+# Checkpoints
+/checkpoints
+!/checkpoints/*/.gitkeep
+
 # Editors
 .vscode
 
@@ -16,4 +20,3 @@ venv
 # Misc
 .DS_Store
 *.egg-info
-checkpoints

@@ -3,24 +3,29 @@ from typing import Dict, List, Union
 
 import torch
 from torch import Tensor
-from transformers import AutoModel, AutoTokenizer, PreTrainedTokenizer
+from transformers import (
+    AutoModelForQuestionAnswering,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    PreTrainedTokenizer,
+)
 
 
 class SentimentAnalyzer:
     """Predicts the sentiment of a text."""
 
     def __init__(self, checkpoint_dir: Union[str, Path]):
-        self.model = AutoModel.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment", cache_dir=checkpoint_dir)
-        self.tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
+        self.model = AutoModelForSequenceClassification.from_pretrained(checkpoint_dir)
+        self.tokenizer = AutoTokenizer.from_pretrained(checkpoint_dir)
         self.model.eval()
-        self.labels = ["positive", "neutral", "negative"]
+        self.labels = ["negative", "neutral", "positive"]
 
     @torch.no_grad()
     def predict(self, text: str) -> Dict[str, float]:
         model_inputs = self.tokenizer(text, return_tensors="pt")
         outputs = self.model(**model_inputs)
-        logits = outputs["logits"].squeeze(0)
-        probs = torch.softmax(logits)
+        logits = outputs["logits"]
+        probs = torch.softmax(logits, dim=-1).squeeze(0)
         return {label: prob.item() for label, prob in zip(self.labels, probs)}
 
 
@@ -28,7 +33,7 @@ class SentimentPhraseExtractor:
     """Predicts the phrase from the text that exemplifies the provided sentiment."""
 
     def __init__(self, checkpoint_dir: Union[Path, str]):
-        self.model = AutoModel.from_pretrained(checkpoint_dir)
+        self.model = AutoModelForQuestionAnswering.from_pretrained(checkpoint_dir)
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint_dir)
         self.model.eval()
 

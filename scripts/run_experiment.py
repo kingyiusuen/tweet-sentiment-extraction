@@ -1,14 +1,24 @@
+import random
 from argparse import ArgumentParser
 
+import numpy as np
 import torch
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 
 from tweet_sentiment_extraction import DataModule, Trainer
 
 
+def seed_everything(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+
 def setup_parser() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument("--model_name", type=str, default="deepset/roberta-base-squad2")
+    parser.add_argument("--seed", type=int, default=168)
     parser.add_argument("--val_percent", type=float, default=0.1, help="Percentage of train set used for validation")
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--num_workers", type=int, default=0)
@@ -27,6 +37,8 @@ def main():
 
     if not args.do_fit and not args.do_predict:
         raise RuntimeError("Use at least one of --do_fit (for training) and --do_predict (for inference).")
+
+    seed_everything(args.seed)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

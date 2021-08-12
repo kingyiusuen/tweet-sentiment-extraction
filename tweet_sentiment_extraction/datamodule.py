@@ -94,7 +94,7 @@ class DataModule:
     def get_dataloader(self, split: str) -> DataLoader:
         return DataLoader(
             self.datasets[split],
-            shuffle=split == "train",  # Only shuffle training dataset
+            shuffle=split == "train",  # Only shuffle the training dataset
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,

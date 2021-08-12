@@ -10,13 +10,20 @@ from tweet_sentiment_extraction.models import (
 CHECKPOINT_DIR = Path(__file__).resolve().parents[1] / "checkpoints"
 
 
-def main():
+@st.cache(allow_output_mutation=True)
+def load_models():
     sentiment_analyzer = SentimentAnalyzer(CHECKPOINT_DIR / "sentiment_analyzer")
     sentiment_phrase_extractor = SentimentPhraseExtractor(CHECKPOINT_DIR / "sentiment_phrase_extractor")
+    return sentiment_analyzer, sentiment_phrase_extractor
 
+
+def main():
     st.set_page_config(page_title="Tweet Sentiment Extract")
+
+    sentiment_analyzer, sentiment_phrase_extractor = load_models()
+
     st.title("Tweet Sentiment Extraction")
-    text = st.text_input("Enter some text")
+    text = st.text_area("Enter some text", height=3)
 
     if st.button("Submit"):
         if text is None:
@@ -25,7 +32,8 @@ def main():
             with st.spinner("Predicting sentiment..."):
                 sentiment_prediction = sentiment_analyzer.predict(text)
             st.subheader("Sentiment")
-            st.table(sentiment_prediction)
+            for sentiment, prob in sentiment_prediction.items():
+                st.write(f"{sentiment}: {round(prob, 3)}")
             most_probable_sentiment = max(
                 sentiment_prediction,
                 key=lambda sentiment: sentiment_prediction[sentiment],

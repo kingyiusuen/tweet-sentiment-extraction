@@ -37,18 +37,13 @@ class Trainer:
     ) -> None:
         """Fit a model."""
         self.model = model
-        self.model.to(self.device)
-        num_training_steps = len(train_dataloader) * self.num_epochs
-        self.configure_optimizer_and_scheduler(num_training_steps)
-        self.metrics = {"loss": MetricTracker(), "jaccard": MetricTracker()}
-        dataloaders_dict = {"train": train_dataloader, "val": val_dataloader}
-        self.best_val_loss = float("inf")
-
+        self.dataloaders_dict = {"train": train_dataloader, "val": val_dataloader}
+        self.on_fit_start()
         for self.epoch in range(self.num_epochs):
             for phase in ["train", "val"]:
                 self.on_epoch_start(phase)
-                progress_bar = tqdm(dataloaders_dict[phase], leave=False, desc=phase)
-                for batch in dataloaders_dict[phase]:
+                progress_bar = tqdm(self.dataloaders_dict[phase], leave=False, desc=phase)
+                for batch in self.dataloaders_dict[phase]:
                     batch["model_inputs"] = self.to_device(batch["model_inputs"])
                     if phase == "train":
                         self.optimizer.zero_grad()
@@ -59,10 +54,18 @@ class Trainer:
                     else:
                         with torch.no_grad():
                             self.common_step(batch)
-
                     progress_bar.update(1)
                     progress_bar.set_postfix({k: v.curr_batch_avg for k, v in self.metrics.items()})
                 self.on_epoch_end(phase)
+
+    def on_fit_start(self) -> None:
+        """Called before fitting starts."""
+        self.model.to(self.device)
+        num_training_steps = len(self.dataloaders_dict["train"]) * self.num_epochs
+        self.configure_optimizer_and_scheduler(num_training_steps)
+        self.metrics = {"loss": MetricTracker(), "jaccard": MetricTracker()}
+        self.best_val_loss = float("inf")
+        self.tokenizer.save_pretrained(self.checkpoint_dir)
 
     def on_epoch_start(self, phase: str) -> None:
         """Called at the beginning of each training/validation epoch."""
