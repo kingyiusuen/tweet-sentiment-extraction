@@ -58,7 +58,3 @@ Run streamlit app.
 ```
 make streamlit
 ```
-
-# Reference
-
-I did look at some notebooks in Kaggle for reference. (They are all very similar, so I will just cite [this one](https://www.kaggle.com/shoheiazuma/tweet-sentiment-roberta-pytorch).) But I didn't just copy their code, because this competition was held over a year before I started working on this, and there has been some changes to Huggingface's API. Also, notebooks tend to be very messy. I refactored the code in a more object-oriented way.
